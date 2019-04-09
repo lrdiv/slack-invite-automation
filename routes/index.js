@@ -32,17 +32,20 @@ router.post('/invite', function(req, res) {
           if (err) { return res.send('Error:' + err); }
           body = JSON.parse(body);
           if (body.ok) {
-            res.render('result', {
+            res.json({
               community: config.community,
-              message: 'Success! Check &ldquo;'+ req.body.email +'&rdquo; for an invite from Slack.'
+              url: config.slackUrl,
+              email: req.body.email,
+              already_invited: false
             });
           } else {
             let error = body.error;
             if (error === 'already_invited' || error === 'already_in_team') {
-              res.render('result', {
+              res.json({
                 community: config.community,
-                message: 'Success! You were already invited.<br>' +
-                        'Visit <a href="https://'+ config.slackUrl +'">'+ config.community +'</a>'
+                url: config.slackUrl,
+                email: req.body.email,
+                already_invited: true
               });
               return;
             } else if (error === 'invalid_email') {
@@ -51,7 +54,7 @@ router.post('/invite', function(req, res) {
               error = 'Something has gone wrong. Please contact a system administrator.';
             }
 
-            res.render('result', {
+            res.status(500).json({
               community: config.community,
               message: 'Failed! ' + error,
               isFailed: true
